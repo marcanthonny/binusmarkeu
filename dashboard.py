@@ -8,35 +8,53 @@ url_c41 = 'https://raw.githubusercontent.com/marcanthonny/binusmarkeu/refs/heads
 url_b41 = 'https://raw.githubusercontent.com/marcanthonny/binusmarkeu/refs/heads/main/bin/cleaned_df/LB41.csv'
 url_a41 = 'https://raw.githubusercontent.com/marcanthonny/binusmarkeu/refs/heads/main/bin/cleaned_df/LA41.csv'
 
+# Load datasets
 datalc41 = pd.read_csv(url_c41)
 datalb41 = pd.read_csv(url_b41)
 datala41 = pd.read_csv(url_a41)
 
-# Print the columns to debug
+# Display columns to help diagnose the issue
 st.write("Columns in LC41:", datalc41.columns.tolist())
 st.write("Columns in LB41:", datalb41.columns.tolist())
 st.write("Columns in LA41:", datala41.columns.tolist())
 
+# Display the first few rows of each dataset for diagnosis
+st.write("First few rows of LC41:")
+st.write(datalc41.head())
+st.write("First few rows of LB41:")
+st.write(datalb41.head())
+st.write("First few rows of LA41:")
+st.write(datala41.head())
+
 # Data cleaning function
 def clean_data(df):
-    # Print the columns to see if 'Percentage Delivered' is available
+    # Print the columns to see if 'Percentage Delivered' and 'Throughout Time' are available
     st.write("Cleaning data columns:", df.columns.tolist())
     
+    # Clean 'Final Profit'
     df['Final Profit'] = df['Final Profit'].replace('[\$,]', '', regex=True).astype(float)
 
     # Check if the column exists before replacing
     if 'Percentage Delivered' in df.columns:
         df['Percentage Delivered'] = df['Percentage Delivered'].replace('%', '', regex=True).astype(float)
     else:
-        st.error("Column 'Percentage Delivered' not found in the dataset.")
+        st.warning("Column 'Percentage Delivered' not found in the dataset. This column will be skipped.")
 
+    # Clean other percentage columns
     df['OTIF Percentage'] = df['OTIF Percentage'].replace('%', '', regex=True).astype(float)
     df['Quality Performance'] = df['Quality Performance'].replace('%', '', regex=True).astype(float)
     df['Flow Efficiency'] = df['Flow Efficiency'].replace('%', '', regex=True).astype(float)
     df['Resource Efficiency'] = df['Resource Efficiency'].replace('%', '', regex=True).astype(float)
     
-    # Convert Throughout Time to minutes
-    df['Throughout Time'] = pd.to_timedelta(df['Throughout Time']).dt.total_seconds() / 60
+    # Convert Throughout Time to minutes if it exists
+    if 'Throughout Time' in df.columns:
+        try:
+            df['Throughout Time'] = pd.to_timedelta(df['Throughout Time']).dt.total_seconds() / 60
+        except Exception as e:
+            st.error(f"Error converting 'Throughout Time': {e}")
+    else:
+        st.warning("Column 'Throughout Time' not found in the dataset. This column will be skipped.")
+    
     return df
 
 # Clean datasets
