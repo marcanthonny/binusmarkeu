@@ -1,112 +1,101 @@
 import streamlit as st
-from web_crawler import news_search
-from analyze_instagram import analyze_instagram_data
-from instagram_sentiment import analyze_sentiments
-from analyze_tiktok import analyze_tiktok_data
-from facebook_sentiment import analyze_facebook_sentiments
-from analyze_facebook import analyze_facebook_data
-from twitter_sentiment import analyze_twitter_sentiments
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import re
 
-st.set_page_config(layout="wide", page_title="Media Center")
+# Set page config
+st.set_page_config(page_title="Performance Dashboard", layout="wide")
 
-st.title("Media Center")
+# Load data from GitHub CSV links
+@st.cache_data
+def load_data():
+    datalc41 = pd.read_csv('https://raw.githubusercontent.com/your_username/your_repo/main/datalc41.csv')
+    datalb41 = pd.read_csv('https://raw.githubusercontent.com/your_username/your_repo/main/datalb41.csv')
+    datala41 = pd.read_csv('https://raw.githubusercontent.com/your_username/your_repo/main/datala41.csv')
+    return datalc41, datalb41, datala41
 
-st.markdown("<hr style='border: 1px solid #acb9bf;'>", unsafe_allow_html=True)
+datalc41, datalb41, datala41 = load_data()
 
-# Function to display the modular design
+# Function to clean the dataset
+def clean_data(df):
+    df['Final Profit'] = df['Final Profit'].replace('[\$,]', '', regex=True).astype(float)
+    df['Percentage Delivered'] = df['Percentage Delivered'].replace('%', '', regex=True).astype(float)
+    df['OTIF Percentage'] = df['OTIF Percentage'].replace('%', '', regex=True).astype(float)
+    df['Quality Performance'] = df['Quality Performance'].replace('%', '', regex=True).astype(float)
+    df['Flow Efficiency'] = df['Flow Efficiency'].replace('%', '', regex=True).astype(float)
+    df['Resource Efficiency'] = df['Resource Efficiency'].replace('%', '', regex=True).astype(float)
 
-
-  # Line separator
- 
-    #st.markdown()
-
-#topcoleft, topcolright = st.column_config
-
-st.markdown(
-    """
-    <style>
-        .centered-text {
-            text-align: center;
-        }
-    </style>
-    <div style="font-size: 18px; font-color: #f4f6f6">
+    # Convert Throughout Time to minutes
+    def convert_to_minutes(time_str):
+        match = re.match(r'(\d+):(\d+)\.(\d+)', time_str)
+        if match:
+            hours = int(match.group(1))
+            minutes = int(match.group(2))
+            seconds = int(match.group(3))
+            total_minutes = hours * 60 + minutes + seconds / 60
+            return total_minutes
+        else:
+            return None  # Return None if the format doesn't match
     
-    Dalam era informasi yang serba cepat seperti sekarang, keberadaan dashboard data analisis menjadi sangat penting dalam dunia politik. Dengan banyaknya data yang tersedia, mulai dari opini publik, tren media sosial, hingga hasil survei, politisi dan tim kampanye dapat dengan cepat dan akurat memahami dinamika yang terjadi di lapangan. Dashboard data analisis memungkinkan pengambilan keputusan yang lebih tepat dengan memvisualisasikan data kompleks secara sederhana dan mudah dipahami. Hal ini tidak hanya membantu dalam menyusun strategi yang efektif, tetapi juga dalam merespon perubahan sentimen publik dengan cepat dan efisien. Dalam konteks persaingan politik yang semakin ketat, kemampuan untuk mengolah dan menganalisis data secara real-time melalui dashboard yang intuitif dan komprehensif dapat menjadi kunci kesuksesan.
-    </div>
-    """,
-    unsafe_allow_html=True
-)    
-st.markdown('')
-st.markdown(
-        """
-        <div style="font-size: 28px; text-align: center;">
-        Temukan wawasan berharga dengan fitur Analisis Sentimen untuk media sosial.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-#Sentiment Analysis
-leftcolumn, middlecolumn, rightcolumn = st.columns([1, 1, 1])
+    df['Throughout Time'] = df['Throughout Time'].apply(convert_to_minutes)
+    return df
 
-with leftcolumn:
-    sentiment_fig = analyze_sentiments()
-    st.plotly_chart(sentiment_fig, use_container_width=True)
+# Clean each dataset
+datalc41 = clean_data(datalc41)
+datalb41 = clean_data(datalb41)
+datala41 = clean_data(datala41)
 
-with middlecolumn:
-    facebook_fig = analyze_facebook_sentiments()
-    st.plotly_chart(facebook_fig, use_container_width=True)
+# Add round column
+for df in [datalc41, datalb41, datala41]:
+    df['Round'] = (df.index // (len(df) // 3)) + 1  # Assign round based on row index
 
-with rightcolumn:
-    twit_fig = analyze_twitter_sentiments()
-    st.plotly_chart(twit_fig, use_container_width=True)
+# Create correlation matrices
+correlation_matrix_c41 = datalc41.corr()
+correlation_matrix_b41 = datalb41.corr()
+correlation_matrix_a41 = datala41.corr()
 
-st.markdown(
-        """
-        <div style="font-size: 28px; text-align: center;">
-        Perhatikan data anda dengan tampilan optimal dengan bagan interaktif dan data paling mutakhir oleh API kami.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# Function to plot correlation heatmap
+def plot_correlation_heatmap(correlation_matrix, title):
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0, fmt=".2f", linewidths=0.5)
+    plt.title(title)
+    st.pyplot(plt)
 
-#Instagram Engagement
-engagement_fig = analyze_instagram_data()
-st.plotly_chart(engagement_fig, use_container_width=True)
+# Plot heatmaps for each dataset
+st.sidebar.header("Correlation Heatmaps")
+st.subheader("Correlation Heatmap for Dataset C41")
+plot_correlation_heatmap(correlation_matrix_c41, "Correlation Matrix Heatmap for datalc41")
+st.subheader("Correlation Heatmap for Dataset B41")
+plot_correlation_heatmap(correlation_matrix_b41, "Correlation Matrix Heatmap for datalb41")
+st.subheader("Correlation Heatmap for Dataset A41")
+plot_correlation_heatmap(correlation_matrix_a41, "Correlation Matrix Heatmap for datala41")
 
-#TikTok Engagement
-tiktok_fig = analyze_tiktok_data()
-st.plotly_chart(tiktok_fig, use_container_width=True)
+# Prepare data for line plots
+def prepare_line_plot_data(df):
+    return pd.melt(df, id_vars='Round', value_vars=[
+        'Percentage Delivered', 'OTIF Percentage', 'Quality Performance', 
+        'Flow Efficiency', 'Resource Efficiency', 'Throughout Time'
+    ])
 
-#facebook engagement
-facebook_engage = analyze_facebook_data()
-st.plotly_chart(facebook_engage, use_container_width=True)
+# Melt dataframes to long format for line plots
+melted_c41 = prepare_line_plot_data(datalc41)
+melted_b41 = prepare_line_plot_data(datalb41)
+melted_a41 = prepare_line_plot_data(datala41)
 
-#Search Bar
-searchbar, howmanyselect = st.columns([3,1])
+# Line plots
+st.subheader("Performance Comparison Across Rounds")
+fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 
-with searchbar:
-    query = st.text_input("Enter search term")
+# Plot for each dataset
+for ax, melted, title in zip(axes, [melted_c41, melted_b41, melted_a41], 
+                              ['Dataset C41', 'Dataset B41', 'Dataset A41']):
+    sns.lineplot(data=melted, x='Round', y='value', hue='variable', marker='o', ax=ax)
+    ax.set_title(f'Performance Comparison in {title}')
+    ax.set_xlabel('Round')
+    ax.set_ylabel('Value')
+    ax.set_xticks([1, 2, 3])
+    ax.legend(title='Categories', bbox_to_anchor=(1.05, 1), loc='upper left')
 
-with howmanyselect:
-    num_results = st.number_input("Number of results", min_value=1, max_value=10, value=5)
-
-if query:
-    st.write(f'Searching for "{query}"...')
-    news_links = news_search(query, num_results)
-    
-    if news_links:
-        st.write('### Found the following links:')
-        for title, link, site, date in news_links:
-            st.markdown(f"""
-                <div style='border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px;'>
-                    <h4 style='margin: 0;'><a href='{link}' target='_blank'>{title}</a></h4>
-                    <p style='margin: 5px 0;'>Source: <a href='{site}' target='_blank'>{site}</a></p>
-                    <p style='margin: 5px 0;'>Date: {date}</p>
-                </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.write('No results found.')
-
-
-# Main app logic
-st.markdown("<h1 style='text-align: center; color: #2196F3;'></h1>", unsafe_allow_html=True)
+plt.tight_layout()
+st.pyplot(fig)
