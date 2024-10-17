@@ -34,6 +34,9 @@ def clean_data(df):
         except Exception as e:
             st.error(f"Error converting 'Throughout Time': {e}")
 
+    # Add 'Round' column
+    df['Round'] = np.arange(1, len(df) + 1)  # Creates a sequential 'Round' column
+
     return df
 
 # Load and clean datasets
@@ -79,29 +82,26 @@ plot_correlation_heatmap(datala41, "Dataset A41")
 
 # Line Graph for Performance Comparison
 def plot_performance_comparison(df, title):
-    if 'Round' in df.columns:
-        st.subheader(f'Performance Comparison for {title}')
+    st.subheader(f'Performance Comparison for {title}')
 
-        # Melt the dataframe for easier plotting
-        melted_df = df.melt(id_vars=['Round'], 
-                            value_vars=['Throughout Time', 'Flow Efficiency', 'Percentage Delivered', 'OTIF Percentage', 'Quality Performance'])
-        
-        # Create the line plot
-        plt.figure(figsize=(14, 8))
-        for variable in melted_df['variable'].unique():
-            subset = melted_df[melted_df['variable'] == variable]
-            plt.plot(subset['Round'], subset['value'], marker='o', label=variable)
+    # Melt the dataframe for easier plotting
+    melted_df = df.melt(id_vars=['Round'], 
+                        value_vars=['Throughout Time', 'Flow Efficiency', 'Percentage Delivered', 'OTIF Percentage', 'Quality Performance'])
+    
+    # Create the line plot
+    plt.figure(figsize=(14, 8))
+    for variable in melted_df['variable'].unique():
+        subset = melted_df[melted_df['variable'] == variable]
+        plt.plot(subset['Round'], subset['value'], marker='o', label=variable)
 
-        plt.title(f'Performance Comparison in {title}')
-        plt.xlabel('Round')
-        plt.ylabel('Values')
-        plt.legend()
-        plt.grid()
+    plt.title(f'Performance Comparison in {title}')
+    plt.xlabel('Round')
+    plt.ylabel('Values')
+    plt.legend()
+    plt.grid()
 
-        # Show the plot
-        st.pyplot(plt)
-    else:
-        st.warning(f"'Round' column not found in {title}. Skipping performance comparison.")
+    # Show the plot
+    st.pyplot(plt)
 
 # Plot performance comparison for each dataset
 plot_performance_comparison(datalc41, "Dataset C41")
