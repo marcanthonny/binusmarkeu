@@ -47,13 +47,24 @@ datala41 = clean_data(pd.read_csv(url3))
 # Title for the dashboard
 st.title("Performance Analysis Dashboard")
 
-# Display user information
-st.markdown("### User Information")
-st.markdown(""" 
-- **Name:** Marc Anthony Samuel
-- **NIM:** 2602193982
-- **Class:** LC41
-""")
+# Title for the dashboard
+st.markdown("<h1 style='text-align: center; color: white;'>Performance Analysis Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("<div style='background-color: darkblue; padding: 10px;'>"
+            "<h3 style='color: white;'>Name: Marc Anthony Samuel</h3>"
+            "<h3 style='color: white;'>NIM: 2602193982</h3>"
+            "<h3 style='color: white;'>Class: LC41</h3>"
+            "</div>", unsafe_allow_html=True)
+
+# Show the cleaned data for exploration
+st.markdown("### Data Exploration")
+st.write("#### Dataset C41")
+st.dataframe(datalc41.head())  # Display first few rows of the cleaned LC41 dataset
+
+st.write("#### Dataset B41")
+st.dataframe(datalb41.head())  # Display first few rows of the cleaned LB41 dataset
+
+st.write("#### Dataset A41")
+st.dataframe(datala41.head())  # Display first few rows of the cleaned LA41 dataset
 
 # Description for correlation matrix
 st.write(""" 
