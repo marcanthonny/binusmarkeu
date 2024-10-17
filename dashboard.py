@@ -12,10 +12,24 @@ datalc41 = pd.read_csv(url_c41)
 datalb41 = pd.read_csv(url_b41)
 datala41 = pd.read_csv(url_a41)
 
+# Print the columns to debug
+st.write("Columns in LC41:", datalc41.columns.tolist())
+st.write("Columns in LB41:", datalb41.columns.tolist())
+st.write("Columns in LA41:", datala41.columns.tolist())
+
 # Data cleaning function
 def clean_data(df):
+    # Print the columns to see if 'Percentage Delivered' is available
+    st.write("Cleaning data columns:", df.columns.tolist())
+    
     df['Final Profit'] = df['Final Profit'].replace('[\$,]', '', regex=True).astype(float)
-    df['Percentage Delivered'] = df['Percentage Delivered'].replace('%', '', regex=True).astype(float)  # Updated line
+
+    # Check if the column exists before replacing
+    if 'Percentage Delivered' in df.columns:
+        df['Percentage Delivered'] = df['Percentage Delivered'].replace('%', '', regex=True).astype(float)
+    else:
+        st.error("Column 'Percentage Delivered' not found in the dataset.")
+
     df['OTIF Percentage'] = df['OTIF Percentage'].replace('%', '', regex=True).astype(float)
     df['Quality Performance'] = df['Quality Performance'].replace('%', '', regex=True).astype(float)
     df['Flow Efficiency'] = df['Flow Efficiency'].replace('%', '', regex=True).astype(float)
