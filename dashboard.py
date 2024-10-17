@@ -47,6 +47,14 @@ datala41 = clean_data(pd.read_csv(url3))
 # Title for the dashboard
 st.title("Performance Analysis Dashboard")
 
+# Display user information
+st.markdown("### User Information")
+st.markdown("""
+- **Name:** Marc Anthony Samuel
+- **NIM:** 2602193982
+- **Class:** LC41
+""")
+
 # Description for correlation matrix
 st.write("""
 Di ketiga dataset, terdapat beberapa pola yang konsisten:
