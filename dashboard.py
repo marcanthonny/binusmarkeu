@@ -45,9 +45,6 @@ datalb41 = clean_data(pd.read_csv(url2))
 datala41 = clean_data(pd.read_csv(url3))
 
 # Title for the dashboard
-st.title("Performance Analysis Dashboard")
-
-# Title for the dashboard
 st.markdown("<h1 style='text-align: center; color: white;'>Performance Analysis Dashboard</h1>", unsafe_allow_html=True)
 st.markdown("<div style='background-color: darkblue; padding: 10px;'>"
             "<h3 style='color: white;'>Name: Marc Anthony Samuel</h3>"
