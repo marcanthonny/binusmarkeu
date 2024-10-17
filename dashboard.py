@@ -1,23 +1,18 @@
 import streamlit as st
 import pandas as pd
-import seaborn as sns
+import numpy as np
 import matplotlib.pyplot as plt
-import re
 
-# Set page config
-st.set_page_config(page_title="Performance Dashboard", layout="wide")
+# Load CSV data from GitHub
+url_c41 = 'https://raw.githubusercontent.com/marcanthonny/binusmarkeu/refs/heads/main/bin/cleaned_df/LC41.csv'
+url_b41 = 'https://raw.githubusercontent.com/marcanthonny/binusmarkeu/refs/heads/main/bin/cleaned_df/LB41.csv'
+url_a41 = 'https://raw.githubusercontent.com/marcanthonny/binusmarkeu/refs/heads/main/bin/cleaned_df/LA41.csv'
 
-# Load data from GitHub CSV links
-@st.cache_data
-def load_data():
-    datalc41 = pd.read_csv('https://raw.githubusercontent.com/your_username/your_repo/main/datalc41.csv')
-    datalb41 = pd.read_csv('https://raw.githubusercontent.com/your_username/your_repo/main/datalb41.csv')
-    datala41 = pd.read_csv('https://raw.githubusercontent.com/your_username/your_repo/main/datala41.csv')
-    return datalc41, datalb41, datala41
+datalc41 = pd.read_csv(url_c41)
+datalb41 = pd.read_csv(url_b41)
+datala41 = pd.read_csv(url_a41)
 
-datalc41, datalb41, datala41 = load_data()
-
-# Function to clean the dataset
+# Data cleaning function
 def clean_data(df):
     df['Final Profit'] = df['Final Profit'].replace('[\$,]', '', regex=True).astype(float)
     df['Percentage Delivered'] = df['Percentage Delivered'].replace('%', '', regex=True).astype(float)
@@ -25,77 +20,105 @@ def clean_data(df):
     df['Quality Performance'] = df['Quality Performance'].replace('%', '', regex=True).astype(float)
     df['Flow Efficiency'] = df['Flow Efficiency'].replace('%', '', regex=True).astype(float)
     df['Resource Efficiency'] = df['Resource Efficiency'].replace('%', '', regex=True).astype(float)
-
-    # Convert Throughout Time to minutes
-    def convert_to_minutes(time_str):
-        match = re.match(r'(\d+):(\d+)\.(\d+)', time_str)
-        if match:
-            hours = int(match.group(1))
-            minutes = int(match.group(2))
-            seconds = int(match.group(3))
-            total_minutes = hours * 60 + minutes + seconds / 60
-            return total_minutes
-        else:
-            return None  # Return None if the format doesn't match
     
-    df['Throughout Time'] = df['Throughout Time'].apply(convert_to_minutes)
+    # Convert Throughout Time to minutes
+    df['Throughout Time'] = pd.to_timedelta(df['Throughout Time']).dt.total_seconds() / 60
     return df
 
-# Clean each dataset
+# Clean datasets
 datalc41 = clean_data(datalc41)
 datalb41 = clean_data(datalb41)
 datala41 = clean_data(datala41)
 
-# Add round column
-for df in [datalc41, datalb41, datala41]:
-    df['Round'] = (df.index // (len(df) // 3)) + 1  # Assign round based on row index
+# Split data into rounds
+datalc41['Round'] = (datalc41.index // (len(datalc41) // 3)) + 1
+datalb41['Round'] = (datalb41.index // (len(datalb41) // 3)) + 1
+datala41['Round'] = (datala41.index // (len(datala41) // 3)) + 1
 
-# Create correlation matrices
-correlation_matrix_c41 = datalc41.corr()
-correlation_matrix_b41 = datalb41.corr()
-correlation_matrix_a41 = datala41.corr()
-
-# Function to plot correlation heatmap
-def plot_correlation_heatmap(correlation_matrix, title):
+# Function to plot correlation matrix heatmap
+def plot_correlation_heatmap(df, title):
+    correlation_matrix = df.corr()
     plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0, fmt=".2f", linewidths=0.5)
+    plt.imshow(correlation_matrix, cmap='coolwarm', interpolation='nearest')
+    plt.colorbar()
+    plt.xticks(range(len(correlation_matrix)), correlation_matrix.columns, rotation=45)
+    plt.yticks(range(len(correlation_matrix)), correlation_matrix.columns)
+    plt.title(f'Correlation Matrix for {title}')
+    st.pyplot(plt)  # Render the plot in Streamlit
+    plt.clf()  # Clear the figure for the next plot
+
+# Function to plot line charts
+def plot_line_chart(df, title):
+    plt.figure(figsize=(12, 6))
+    
+    for col in df.columns[1:-1]:  # Exclude 'Final Profit' and 'Round'
+        plt.plot(df['Round'], df[col], marker='o', label=col)
+    
     plt.title(title)
-    st.pyplot(plt)
+    plt.xlabel('Round')
+    plt.ylabel('Performance')
+    plt.xticks(np.arange(1, 4, 1))  # Show ticks for 3 rounds
+    plt.legend()
+    plt.grid()
+    st.pyplot(plt)  # Render the plot in Streamlit
+    plt.clf()  # Clear the figure for the next plot
 
-# Plot heatmaps for each dataset
-st.sidebar.header("Correlation Heatmaps")
-st.subheader("Correlation Heatmap for Dataset C41")
-plot_correlation_heatmap(correlation_matrix_c41, "Correlation Matrix Heatmap for datalc41")
-st.subheader("Correlation Heatmap for Dataset B41")
-plot_correlation_heatmap(correlation_matrix_b41, "Correlation Matrix Heatmap for datalb41")
-st.subheader("Correlation Heatmap for Dataset A41")
-plot_correlation_heatmap(correlation_matrix_a41, "Correlation Matrix Heatmap for datala41")
+# Display the plots
+st.title('Performance Analysis Dashboard')
+st.markdown("<h1 style='text-align: center; color: white; background-color: darkblue;'>Performance Analysis</h1>", unsafe_allow_html=True)
 
-# Prepare data for line plots
-def prepare_line_plot_data(df):
-    return pd.melt(df, id_vars='Round', value_vars=[
-        'Percentage Delivered', 'OTIF Percentage', 'Quality Performance', 
-        'Flow Efficiency', 'Resource Efficiency', 'Throughout Time'
-    ])
+# Description for Correlation Matrix
+st.markdown("""
+Di ketiga dataset, terdapat beberapa pola yang konsisten:
 
-# Melt dataframes to long format for line plots
-melted_c41 = prepare_line_plot_data(datalc41)
-melted_b41 = prepare_line_plot_data(datalb41)
-melted_a41 = prepare_line_plot_data(datala41)
+Final Profit (Keuntungan Akhir) sangat dipengaruhi oleh metrik efisiensi seperti Flow Efficiency (Efisiensi Aliran), Percentage Delivered (Persentase Pengiriman), dan OTIF Percentage (Persentase Tepat Waktu dan Lengkap). Perusahaan yang ingin meningkatkan keuntungan harus fokus pada peningkatan ketepatan pengiriman, efisiensi aliran, dan meminimalkan tingkat stok.
+Average Stock (Rata-rata Stok) secara konsisten berkorelasi negatif dengan keuntungan akhir, yang menyiratkan bahwa mengurangi tingkat inventaris secara signifikan dapat meningkatkan profitabilitas.
+Throughout Time (Waktu Proses) cenderung memiliki korelasi negatif di seluruh data, yang menunjukkan bahwa pengurangan waktu proses atau lead time dapat meningkatkan berbagai metrik kinerja.
+""")
 
-# Line plots
-st.subheader("Performance Comparison Across Rounds")
-fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+# Correlation Matrices
+st.subheader("Correlation Matrix for Dataset C41")
+plot_correlation_heatmap(datalc41, "Dataset C41")
 
-# Plot for each dataset
-for ax, melted, title in zip(axes, [melted_c41, melted_b41, melted_a41], 
-                              ['Dataset C41', 'Dataset B41', 'Dataset A41']):
-    sns.lineplot(data=melted, x='Round', y='value', hue='variable', marker='o', ax=ax)
-    ax.set_title(f'Performance Comparison in {title}')
-    ax.set_xlabel('Round')
-    ax.set_ylabel('Value')
-    ax.set_xticks([1, 2, 3])
-    ax.legend(title='Categories', bbox_to_anchor=(1.05, 1), loc='upper left')
+st.subheader("Correlation Matrix for Dataset B41")
+plot_correlation_heatmap(datalb41, "Dataset B41")
 
-plt.tight_layout()
-st.pyplot(fig)
+st.subheader("Correlation Matrix for Dataset A41")
+plot_correlation_heatmap(datala41, "Dataset A41")
+
+# Description for Line Graphs
+st.markdown("""
+### Analisis:
+**Dataset C41:**
+Waktu Penyelesaian (coklat) menunjukkan penurunan signifikan dari putaran 1 ke putaran 3, dimulai di atas 350 dan turun mendekati 100.
+Efisiensi Aliran (merah) dimulai rendah dan meningkat secara bertahap, menunjukkan peningkatan efisiensi aliran di setiap putaran.
+Metrik lainnya menunjukkan peningkatan bertahap (Persentase Pengiriman, OTIF, Kinerja Kualitas) atau mempertahankan nilai yang stabil dengan sedikit variasi.
+
+**Dataset B41:**
+Waktu Penyelesaian (coklat) menunjukkan tren penurunan yang konsisten, mirip dengan C41 tetapi dimulai sekitar 300.
+Metrik lain seperti Efisiensi Aliran dan Persentase Pengiriman menunjukkan peningkatan konsisten di setiap putaran, mirip dengan C41.
+Kategori lainnya relatif stabil dengan perubahan kecil antara putaran.
+
+**Dataset A41:**
+Waktu Penyelesaian (coklat) memiliki pola paling dramatis: dimulai dari 200 di putaran 1, kemudian menunjukkan lonjakan tajam di atas 1000 pada putaran 3.
+Metrik lainnya (Persentase Pengiriman, OTIF, Efisiensi Aliran, Kinerja Kualitas) hanya menunjukkan sedikit perubahan atau performa yang stabil di setiap putaran.
+
+**Kesimpulan:**
+Waktu Penyelesaian adalah metrik yang paling tidak stabil, menunjukkan fluktuasi besar di antara dataset dan putaran.
+
+Efisiensi Aliran dan Persentase Pengiriman secara konsisten meningkat di semua dataset.
+
+Dataset A41 menunjukkan lonjakan paling ekstrem pada Waktu Penyelesaian, sedangkan dataset lainnya, C41 dan B41, mengalami penurunan signifikan.
+
+Secara keseluruhan, sebagian besar metrik tampaknya meningkat atau tetap stabil, kecuali Waktu Penyelesaian yang menunjukkan perilaku berbeda di setiap dataset.
+""")
+
+# Line Charts
+st.subheader("Performance Comparison in Dataset C41")
+plot_line_chart(datalc41, "Dataset C41 Performance")
+
+st.subheader("Performance Comparison in Dataset B41")
+plot_line_chart(datalb41, "Dataset B41 Performance")
+
+st.subheader("Performance Comparison in Dataset A41")
+plot_line_chart(datala41, "Dataset A41 Performance")
