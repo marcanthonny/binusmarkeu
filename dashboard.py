@@ -79,26 +79,29 @@ plot_correlation_heatmap(datala41, "Dataset A41")
 
 # Line Graph for Performance Comparison
 def plot_performance_comparison(df, title):
-    st.subheader(f'Performance Comparison for {title}')
+    if 'Round' in df.columns:
+        st.subheader(f'Performance Comparison for {title}')
 
-    # Melt the dataframe for easier plotting
-    melted_df = df.melt(id_vars=['Round'], 
-                        value_vars=['Throughout Time', 'Flow Efficiency', 'Percentage Delivered', 'OTIF Percentage', 'Quality Performance'])
-    
-    # Create the line plot
-    plt.figure(figsize=(14, 8))
-    for variable in melted_df['variable'].unique():
-        subset = melted_df[melted_df['variable'] == variable]
-        plt.plot(subset['Round'], subset['value'], marker='o', label=variable)
+        # Melt the dataframe for easier plotting
+        melted_df = df.melt(id_vars=['Round'], 
+                            value_vars=['Throughout Time', 'Flow Efficiency', 'Percentage Delivered', 'OTIF Percentage', 'Quality Performance'])
+        
+        # Create the line plot
+        plt.figure(figsize=(14, 8))
+        for variable in melted_df['variable'].unique():
+            subset = melted_df[melted_df['variable'] == variable]
+            plt.plot(subset['Round'], subset['value'], marker='o', label=variable)
 
-    plt.title(f'Performance Comparison in {title}')
-    plt.xlabel('Round')
-    plt.ylabel('Values')
-    plt.legend()
-    plt.grid()
+        plt.title(f'Performance Comparison in {title}')
+        plt.xlabel('Round')
+        plt.ylabel('Values')
+        plt.legend()
+        plt.grid()
 
-    # Show the plot
-    st.pyplot(plt)
+        # Show the plot
+        st.pyplot(plt)
+    else:
+        st.warning(f"'Round' column not found in {title}. Skipping performance comparison.")
 
 # Plot performance comparison for each dataset
 plot_performance_comparison(datalc41, "Dataset C41")
@@ -116,13 +119,3 @@ Dataset A41 menunjukkan lonjakan paling ekstrem pada Waktu Penyelesaian, sedangk
 
 Secara keseluruhan, sebagian besar metrik tampaknya meningkat atau tetap stabil, kecuali Waktu Penyelesaian yang menunjukkan perilaku berbeda di setiap dataset.
 """)
-
-# Line Charts
-st.subheader("Performance Comparison in Dataset C41")
-plot_line_chart(datalc41, "Dataset C41 Performance")
-
-st.subheader("Performance Comparison in Dataset B41")
-plot_line_chart(datalb41, "Dataset B41 Performance")
-
-st.subheader("Performance Comparison in Dataset A41")
-plot_line_chart(datala41, "Dataset A41 Performance")
