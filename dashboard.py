@@ -49,14 +49,14 @@ st.title("Performance Analysis Dashboard")
 
 # Display user information
 st.markdown("### User Information")
-st.markdown("""
+st.markdown(""" 
 - **Name:** Marc Anthony Samuel
 - **NIM:** 2602193982
 - **Class:** LC41
 """)
 
 # Description for correlation matrix
-st.write("""
+st.write(""" 
 Di ketiga dataset, terdapat beberapa pola yang konsisten:
 
 Final Profit (Keuntungan Akhir) sangat dipengaruhi oleh metrik efisiensi seperti Flow Efficiency (Efisiensi Aliran), Percentage Delivered (Persentase Pengiriman), dan OTIF Percentage (Persentase Tepat Waktu dan Lengkap). Perusahaan yang ingin meningkatkan keuntungan harus fokus pada peningkatan ketepatan pengiriman, efisiensi aliran, dan meminimalkan tingkat stok.
