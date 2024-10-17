@@ -15,7 +15,7 @@ datala41 = pd.read_csv(url_a41)
 # Data cleaning function
 def clean_data(df):
     df['Final Profit'] = df['Final Profit'].replace('[\$,]', '', regex=True).astype(float)
-    df['Percentage Delivered'] = df['Percentage Delivered'].replace('%', '', regex=True).astype(float)
+    df['Percentage Delivered'] = df['Percentage Delivered'].replace('%', '', regex=True).astype(float)  # Updated line
     df['OTIF Percentage'] = df['OTIF Percentage'].replace('%', '', regex=True).astype(float)
     df['Quality Performance'] = df['Quality Performance'].replace('%', '', regex=True).astype(float)
     df['Flow Efficiency'] = df['Flow Efficiency'].replace('%', '', regex=True).astype(float)
